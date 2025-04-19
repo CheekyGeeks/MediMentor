@@ -9,6 +9,7 @@ import {
 // Pages
 import Home from "./pages/Home";
 import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
 				{/* Public routes */}
 				<Route path="/" element={<Home />} />
 				<Route path="/signin" element={<SignIn />} />
+				<Route path="/signup" element={<SignUp />} />
 
 				{/* Simple protected route */}
 				<Route

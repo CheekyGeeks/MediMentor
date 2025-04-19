@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
 const SignUp = () => {
@@ -26,19 +26,25 @@ const SignUp = () => {
 		setIsLoading(true);
 
 		try {
+			// Since we don't have a real backend, let's simulate a successful response
+			// Comment out the axios call for now and use setTimeout to simulate a network request
+
+			// Simulate a successful registration
+			setTimeout(() => {
+				// Redirect to login page after successful registration
+				navigate("/signin");
+			}, 1000);
+
+			/* Real implementation would be:
 			const response = await axios.post("/api/auth/signup", {
 				name,
 				email,
 				password,
 			});
-
-			// After successful signup, either:
-			// 1. Automatically log them in
-			localStorage.setItem("token", response.data.token);
-			localStorage.setItem("user", JSON.stringify(response.data.user));
-
-			// 2. Or redirect to login page with success message
-			navigate("/dashboard");
+			
+			// Redirect to login page after successful registration
+			navigate("/signin");
+			*/
 		} catch (err) {
 			setError(
 				err.response?.data?.message ||
@@ -203,12 +209,12 @@ const SignUp = () => {
 
 							<p className="text-center text-accent/70 text-sm">
 								Already have an account?{" "}
-								<a
-									href="/signin"
+								<Link
+									to="/signin"
 									className="text-primary hover:text-primary/80"
 								>
 									Sign in
-								</a>
+								</Link>
 							</p>
 						</form>
 					</motion.div>

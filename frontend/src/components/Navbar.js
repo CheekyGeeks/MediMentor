@@ -81,7 +81,7 @@ const Navbar = () => {
 								>
 									Sign In
 								</Link>
-								<Link to="/signin" className="btn-primary">
+								<Link to="/signup" className="btn-primary">
 									Sign Up
 								</Link>
 							</>
@@ -151,7 +151,7 @@ const Navbar = () => {
 									>
 										Sign In
 									</Link>
-									<Link to="/signin" className="btn-primary self-start">
+									<Link to="/signup" className="btn-primary self-start">
 										Sign Up
 									</Link>
 								</>
