@@ -59,8 +59,8 @@ To set up the backend, follow these steps:
    cd MediMentor/backend
    
 - Create a Virtual Environment (Optional but Recommended)python -m venv env
-source env/bin/activate   # On macOS/Linux
-env\Scripts\activate      # On Windows
+## source env/bin/activate   # On macOS/Linux
+## env\Scripts\activate      # On Windows
 
 - Install Dependencies
 Using requirements.txt:
