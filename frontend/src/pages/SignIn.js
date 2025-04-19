@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const SignIn = () => {
 	const [email, setEmail] = useState("");
@@ -35,8 +35,8 @@ const SignIn = () => {
 					})
 				);
 
-				// Redirect to dashboard after successful login
-				navigate("/dashboard");
+				// Redirect to home page after successful login instead of dashboard
+				navigate("/");
 			}, 1000); // Simulate network delay
 		} catch (err) {
 			setError(err.message || "An error occurred. Please try again.");
@@ -173,19 +173,19 @@ const SignIn = () => {
 							<button
 								type="submit"
 								disabled={isLoading}
-								className="w-full bg-black text-white font-medium py-3 rounded-md hover:bg-black/80 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-black/30 focus:ring-offset-2 mb-4"
+								className="w-full bg-primary text-white font-medium py-3 rounded-md hover:bg-primary/90 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 mb-4"
 							>
 								{isLoading ? "Signing in..." : "Log in"}
 							</button>
 
 							<p className="text-center text-accent/70 text-sm">
 								Don't have an account?{" "}
-								<a
-									href="/signin"
+								<Link
+									to="/signup"
 									className="text-primary hover:text-primary/80"
 								>
 									Register here
-								</a>
+								</Link>
 							</p>
 						</form>
 					</motion.div>
