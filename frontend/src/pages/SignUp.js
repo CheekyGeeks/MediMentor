@@ -31,8 +31,19 @@ const SignUp = () => {
 
 			// Simulate a successful registration
 			setTimeout(() => {
-				// Redirect to login page after successful registration
-				navigate("/signin");
+				// Store token and user info in localStorage
+				localStorage.setItem("token", "mock-jwt-token");
+				localStorage.setItem(
+					"user",
+					JSON.stringify({
+						id: "1",
+						name: name,
+						email: email,
+					})
+				);
+
+				// Redirect to questionnaire instead of signin
+				navigate("/questionnaire/gender");
 			}, 1000);
 
 			/* Real implementation would be:
@@ -42,8 +53,10 @@ const SignUp = () => {
 				password,
 			});
 			
-			// Redirect to login page after successful registration
-			navigate("/signin");
+			localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+			// Redirect to questionnaire after successful registration
+			navigate("/questionnaire/gender");
 			*/
 		} catch (err) {
 			setError(
@@ -202,9 +215,9 @@ const SignUp = () => {
 							<button
 								type="submit"
 								disabled={isLoading}
-								className="w-full bg-black text-white font-medium py-3 rounded-md hover:bg-black/80 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-black/30 focus:ring-offset-2 mb-4"
+								className="w-full bg-primary text-white font-medium py-3 rounded-md hover:bg-primary/90 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 mb-4"
 							>
-								{isLoading ? "Creating Account..." : "Sign Up"}
+								{isLoading ? "Creating Account..." : "Sign Up & Continue"}
 							</button>
 
 							<p className="text-center text-accent/70 text-sm">
