@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
+
+const API_URL = "http://localhost:8000";
 
 const SignIn = () => {
 	const [email, setEmail] = useState("");
@@ -17,29 +21,21 @@ const SignIn = () => {
 		setIsLoading(true);
 
 		try {
-			// Simple validation
-			if (!email || !password) {
-				throw new Error("Please provide both email and password");
-			}
-
-			// Mock login - accept any credentials
-			setTimeout(() => {
-				// Store fake user data and token
-				localStorage.setItem("token", "mock-jwt-token");
-				localStorage.setItem(
-					"user",
-					JSON.stringify({
-						id: "1",
-						name: "Demo User",
-						email: email,
-					})
-				);
-
-				// Redirect to dashboard after successful login
-				navigate("/dashboard");
-			}, 1000); // Simulate network delay
+			// Real login using Django backend
+			const response = await axios.post(`${API_URL}/api/auth/login/`, {
+				email,
+				password
+			});
+			
+			// Store the tokens and user data
+			localStorage.setItem("token", response.data.access);
+			localStorage.setItem("refreshToken", response.data.refresh);
+			localStorage.setItem("user", JSON.stringify(response.data.user));
+			
+			// Redirect to dashboard after successful login
+			navigate("/dashboard");
 		} catch (err) {
-			setError(err.message || "An error occurred. Please try again.");
+			setError(err.response?.data?.error || "Invalid email or password");
 			setIsLoading(false);
 		}
 	};

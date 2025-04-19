@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
+const API_URL = "http://localhost:8000";
+
 const SignUp = () => {
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
@@ -26,34 +28,33 @@ const SignUp = () => {
 		setIsLoading(true);
 
 		try {
-			// Since we don't have a real backend, let's simulate a successful response
-			// Comment out the axios call for now and use setTimeout to simulate a network request
-
-			// Simulate a successful registration
-			setTimeout(() => {
-				// Redirect to login page after successful registration
-				navigate("/signin");
-			}, 1000);
-
-			/* Real implementation would be:
-			const response = await axios.post("/api/auth/signup", {
+			// Real implementation using Django backend
+			const response = await axios.post(`${API_URL}/api/auth/register/`, {
 				name,
 				email,
 				password,
+				confirm_password: confirmPassword
 			});
 			
-			// Redirect to login page after successful registration
-			navigate("/signin");
-			*/
+			// Store the token
+			localStorage.setItem("token", response.data.access);
+			localStorage.setItem("refreshToken", response.data.refresh);
+			localStorage.setItem("user", JSON.stringify(response.data.user));
+			
+			// Redirect to dashboard after successful registration
+			navigate("/dashboard");
 		} catch (err) {
 			setError(
-				err.response?.data?.message ||
-					"An error occurred during signup. Please try again."
+				err.response?.data?.error || 
+                err.response?.data?.password?.[0] ||
+                err.response?.data?.email?.[0] ||
+                "An error occurred during signup. Please try again."
 			);
 		} finally {
 			setIsLoading(false);
 		}
 	};
+
 
 	return (
 		<div className="min-h-screen flex bg-secondary">
