@@ -55,9 +55,9 @@ To set up the backend, follow these steps:
 1. **Clone the Repository**  
    ```sh
    git clone https://github.com/your-repository/MediMentor.git
+   ```
    cd MediMentor/backend
-   ````
-
+   
 - Create a Virtual Environment (Optional but Recommended)python -m venv env
 source env/bin/activate   # On macOS/Linux
 env\Scripts\activate      # On Windows
@@ -102,4 +102,12 @@ npm install
 📄 License
 This project is licensed under the MIT License.
 
+## 👨‍💻 Development Team: Cheeky Geeks  
+
+| **Serial No.** | **Name**          | **Role**                                   |
+|---------------|------------------|----------------------------------------------|
+| 1             | Abhishek Saxena   | website develop & Documentation             |
+| 2             | Gajendra Pandey   | Backend & Integration|
+| 3             | Arpan Bhowmick    | Designing & Frontend                        |
+| 4            | Vikas Kumar       | AI and other Data Science Modules |
 
