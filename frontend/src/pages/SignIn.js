@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+<<<<<<< HEAD
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 
 const API_URL = "http://localhost:8000";
+=======
+import { useNavigate, Link } from "react-router-dom";
+>>>>>>> 6033bb8eadccaffba70b1392710ccd64d54e5138
 
 const SignIn = () => {
 	const [email, setEmail] = useState("");
@@ -21,6 +25,7 @@ const SignIn = () => {
 		setIsLoading(true);
 
 		try {
+<<<<<<< HEAD
 			// Real login using Django backend
 			const response = await axios.post(`${API_URL}/api/auth/login/`, {
 				email,
@@ -32,8 +37,31 @@ const SignIn = () => {
 			localStorage.setItem("refreshToken", response.data.refresh);
 			localStorage.setItem("user", JSON.stringify(response.data.user));
 			
-			// Redirect to dashboard after successful login
-			navigate("/dashboard");
+				// Redirect to home page after successful login instead of dashboard
+				navigate("/");
+=======
+			// Simple validation
+			if (!email || !password) {
+				throw new Error("Please provide both email and password");
+			}
+
+			// Mock login - accept any credentials
+			setTimeout(() => {
+				// Store fake user data and token
+				localStorage.setItem("token", "mock-jwt-token");
+				localStorage.setItem(
+					"user",
+					JSON.stringify({
+						id: "1",
+						name: "Demo User",
+						email: email,
+					})
+				);
+
+				// Redirect to home page after successful login instead of dashboard
+				navigate("/");
+			}, 1000); // Simulate network delay
+>>>>>>> 6033bb8eadccaffba70b1392710ccd64d54e5138
 		} catch (err) {
 			setError(err.response?.data?.error || "Invalid email or password");
 			setIsLoading(false);
@@ -169,19 +197,19 @@ const SignIn = () => {
 							<button
 								type="submit"
 								disabled={isLoading}
-								className="w-full bg-black text-white font-medium py-3 rounded-md hover:bg-black/80 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-black/30 focus:ring-offset-2 mb-4"
+								className="w-full bg-primary text-white font-medium py-3 rounded-md hover:bg-primary/90 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 mb-4"
 							>
 								{isLoading ? "Signing in..." : "Log in"}
 							</button>
 
 							<p className="text-center text-accent/70 text-sm">
 								Don't have an account?{" "}
-								<a
-									href="/signin"
+								<Link
+									to="/signup"
 									className="text-primary hover:text-primary/80"
 								>
 									Register here
-								</a>
+								</Link>
 							</p>
 						</form>
 					</motion.div>

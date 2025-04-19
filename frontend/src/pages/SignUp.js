@@ -28,14 +28,40 @@ const SignUp = () => {
 		setIsLoading(true);
 
 		try {
+<<<<<<< HEAD
 			// Real implementation using Django backend
 			const response = await axios.post(`${API_URL}/api/auth/register/`, {
+=======
+			// Since we don't have a real backend, let's simulate a successful response
+			// Comment out the axios call for now and use setTimeout to simulate a network request
+
+			// Simulate a successful registration
+			setTimeout(() => {
+				// Store token and user info in localStorage
+				localStorage.setItem("token", "mock-jwt-token");
+				localStorage.setItem(
+					"user",
+					JSON.stringify({
+						id: "1",
+						name: name,
+						email: email,
+					})
+				);
+
+				// Redirect to questionnaire instead of signin
+				navigate("/questionnaire/gender");
+			}, 1000);
+
+			/* Real implementation would be:
+			const response = await axios.post("/api/auth/signup", {
+>>>>>>> 6033bb8eadccaffba70b1392710ccd64d54e5138
 				name,
 				email,
 				password,
 				confirm_password: confirmPassword
 			});
 			
+<<<<<<< HEAD
 			// Store the token
 			localStorage.setItem("token", response.data.access);
 			localStorage.setItem("refreshToken", response.data.refresh);
@@ -43,6 +69,13 @@ const SignUp = () => {
 			
 			// Redirect to dashboard after successful registration
 			navigate("/dashboard");
+=======
+			localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+			// Redirect to questionnaire after successful registration
+			navigate("/questionnaire/gender");
+			*/
+>>>>>>> 6033bb8eadccaffba70b1392710ccd64d54e5138
 		} catch (err) {
 			setError(
 				err.response?.data?.error || 
@@ -203,9 +236,9 @@ const SignUp = () => {
 							<button
 								type="submit"
 								disabled={isLoading}
-								className="w-full bg-black text-white font-medium py-3 rounded-md hover:bg-black/80 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-black/30 focus:ring-offset-2 mb-4"
+								className="w-full bg-primary text-white font-medium py-3 rounded-md hover:bg-primary/90 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 mb-4"
 							>
-								{isLoading ? "Creating Account..." : "Sign Up"}
+								{isLoading ? "Creating Account..." : "Sign Up & Continue"}
 							</button>
 
 							<p className="text-center text-accent/70 text-sm">
