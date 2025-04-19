@@ -13,9 +13,23 @@ const QuestionnaireComplete = () => {
 		// Set a flag in localStorage to indicate questionnaire is completed
 		localStorage.setItem("questionnaireCompleted", "true");
 
-		// Redirect to home page after 3 seconds
+		// Update the user data with questionnaire answers
+		try {
+			const userData = JSON.parse(localStorage.getItem("user") || "{}");
+			userData.questionnaire = answers;
+			localStorage.setItem("user", JSON.stringify(userData));
+		} catch (error) {
+			console.error("Error updating user data:", error);
+		}
+
+		// Make sure the token is set for authentication persistence
+		if (!localStorage.getItem("token")) {
+			localStorage.setItem("token", "mock-jwt-token");
+		}
+
+		// Redirect to dashboard after 3 seconds
 		const timer = setTimeout(() => {
-			navigate("/Dashboard");
+			navigate("/dashboard", { replace: true });
 		}, 3000);
 
 		return () => clearTimeout(timer);
@@ -52,7 +66,7 @@ const QuestionnaireComplete = () => {
 				</div>
 
 				<p className="text-sm text-accent/60">
-					You'll be redirected to the home page automatically...
+					You'll be redirected to your dashboard automatically...
 				</p>
 			</div>
 		</div>

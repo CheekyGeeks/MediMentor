@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import QuestionnaireLayout from "../../components/questionnaire/QuestionnaireLayout";
 import RadioOption from "../../components/questionnaire/RadioOption";
@@ -11,6 +11,14 @@ const WorkType = () => {
 	const handleChange = (value) => {
 		updateAnswer("workType", value);
 	};
+
+	// Auto-fill smoking status and cigarettes per day for children
+	useEffect(() => {
+		if (answers.workType === "child") {
+			updateAnswer("smokingStatus", "never");
+			updateAnswer("cigarettesPerDay", "0");
+		}
+	}, [answers.workType, updateAnswer]);
 
 	return (
 		<QuestionnaireLayout

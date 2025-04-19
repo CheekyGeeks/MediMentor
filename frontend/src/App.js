@@ -10,7 +10,7 @@ import {
 import Home from "./pages/Home";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
-import Dashboard from "./pages/Dashboard"; // Comment out Dashboard for now
+import Dashboard from "./pages/Dashboard";
 import {
 	Gender,
 	Age,
@@ -83,8 +83,17 @@ function App() {
 						element={<QuestionnaireComplete />}
 					/>
 
-					{/* Temporarily redirect /dashboard to home */}
-					<Route path="/Dashboard" element={<Dashboard/>} />
+					{/* Protected dashboard route */}
+					<Route
+						path="/dashboard"
+						element={
+							localStorage.getItem("token") ? (
+								<Dashboard />
+							) : (
+								<Navigate to="/signin" />
+							)
+						}
+					/>
 
 					{/* Fallback route */}
 					<Route path="*" element={<Navigate to="/" />} />

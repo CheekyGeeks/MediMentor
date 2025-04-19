@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import QuestionnaireLayout from "../../components/questionnaire/QuestionnaireLayout";
 import RadioOption from "../../components/questionnaire/RadioOption";
@@ -11,6 +11,13 @@ const SmokingStatus = () => {
 	const handleChange = (value) => {
 		updateAnswer("smokingStatus", value);
 	};
+
+	// Skip this question for children
+	useEffect(() => {
+		if (answers.workType === "child") {
+			navigate("/questionnaire/cholesterol");
+		}
+	}, [answers.workType, navigate]);
 
 	return (
 		<QuestionnaireLayout
