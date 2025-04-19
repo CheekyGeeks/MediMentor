@@ -1,14 +1,11 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-<<<<<<< HEAD
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
 
 const API_URL = "http://localhost:8000";
-=======
-import { useNavigate, Link } from "react-router-dom";
->>>>>>> 6033bb8eadccaffba70b1392710ccd64d54e5138
+
 
 const SignIn = () => {
 	const [email, setEmail] = useState("");
@@ -25,7 +22,6 @@ const SignIn = () => {
 		setIsLoading(true);
 
 		try {
-<<<<<<< HEAD
 			// Real login using Django backend
 			const response = await axios.post(`${API_URL}/api/auth/login/`, {
 				email,
@@ -37,37 +33,13 @@ const SignIn = () => {
 			localStorage.setItem("refreshToken", response.data.refresh);
 			localStorage.setItem("user", JSON.stringify(response.data.user));
 			
-				// Redirect to home page after successful login instead of dashboard
-				navigate("/");
-=======
-			// Simple validation
-			if (!email || !password) {
-				throw new Error("Please provide both email and password");
-			}
-
-			// Mock login - accept any credentials
-			setTimeout(() => {
-				// Store fake user data and token
-				localStorage.setItem("token", "mock-jwt-token");
-				localStorage.setItem(
-					"user",
-					JSON.stringify({
-						id: "1",
-						name: "Demo User",
-						email: email,
-					})
-				);
-
-				// Redirect to home page after successful login instead of dashboard
-				navigate("/");
-			}, 1000); // Simulate network delay
->>>>>>> 6033bb8eadccaffba70b1392710ccd64d54e5138
+			// Redirect to dashboard after successful login
+			navigate("/Dashboard");
 		} catch (err) {
 			setError(err.response?.data?.error || "Invalid email or password");
 			setIsLoading(false);
 		}
 	};
-
 	return (
 		<div className="min-h-screen flex bg-secondary">
 			{/* Left Side - Image */}

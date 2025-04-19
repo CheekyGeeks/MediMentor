@@ -10,7 +10,7 @@ import {
 import Home from "./pages/Home";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
-// import Dashboard from "./pages/Dashboard"; // Comment out Dashboard for now
+import Dashboard from "./pages/Dashboard"; // Comment out Dashboard for now
 import {
 	Gender,
 	Age,
@@ -84,7 +84,7 @@ function App() {
 					/>
 
 					{/* Temporarily redirect /dashboard to home */}
-					<Route path="/dashboard" element={<Navigate to="/" />} />
+					<Route path="/Dashboard" element={<Dashboard/>} />
 
 					{/* Fallback route */}
 					<Route path="*" element={<Navigate to="/" />} />

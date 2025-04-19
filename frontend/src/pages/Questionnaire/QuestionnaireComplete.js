@@ -15,7 +15,7 @@ const QuestionnaireComplete = () => {
 
 		// Redirect to home page after 3 seconds
 		const timer = setTimeout(() => {
-			navigate("/");
+			navigate("/Dashboard");
 		}, 3000);
 
 		return () => clearTimeout(timer);
