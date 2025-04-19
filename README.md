@@ -40,9 +40,6 @@ MediMentor is simple to use—it collects user data and leverages AI to provide 
    - Personalized chatbot for every user.
 
 Certainly! Here's a structured README file with installation instructions for both the backend (Python) and frontend (Node.js using npm):
-# MediMentor: AI-Powered Personalized Health Coach
-
-MediMentor is an all-in-one health application leveraging AI for personalized coaching and predictive health insights.
 
 ## 🔧 Backend Setup (Python)
 To set up the backend, follow these steps:
