@@ -12,6 +12,7 @@ import Home from "./pages/Home";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
+import Chatbot from "./pages/Chatbot";
 import {
 	Gender,
 	Age,
@@ -118,6 +119,16 @@ function App() {
 						element={
 							<ProtectedRoute>
 								<Dashboard />
+							</ProtectedRoute>
+						}
+					/>
+
+					{/* Protected chatbot route */}
+					<Route
+						path="/chatbot"
+						element={
+							<ProtectedRoute>
+								<Chatbot />
 							</ProtectedRoute>
 						}
 					/>

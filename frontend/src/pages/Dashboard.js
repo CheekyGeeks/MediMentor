@@ -97,7 +97,7 @@ const Dashboard = () => {
 	const sidebarVariants = {
 		open: {
 			x: 0,
-			width: "auto",
+			width: "250px",
 			transition: {
 				type: "spring",
 				stiffness: 300,
@@ -128,23 +128,7 @@ const Dashboard = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-secondary relative">
-			{/* Toggle Button */}
-			<motion.button
-				className="fixed top-20 left-4 z-50 bg-primary text-white p-2 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
-				onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-				initial={{ opacity: 0 }}
-				animate={{ opacity: 1 }}
-				whileHover={{ scale: 1.1 }}
-				whileTap={{ scale: 0.95 }}
-			>
-				{isSidebarOpen ? (
-					<HiOutlineX size={24} />
-				) : (
-					<HiOutlineMenuAlt2 size={24} />
-				)}
-			</motion.button>
-
+		<div className="min-h-screen bg-secondary">
 			{/* Header */}
 			<motion.header
 				className="bg-white shadow-md"
@@ -153,7 +137,21 @@ const Dashboard = () => {
 				transition={{ duration: 0.5 }}
 			>
 				<div className="container-custom py-4 flex justify-between items-center">
-					<h1 className="text-2xl font-bold text-primary">MediMentor</h1>
+					<div className="flex items-center">
+						<motion.button
+							className="text-primary p-2 rounded-full hover:bg-primary/10 transition-colors mr-2"
+							onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+							whileHover={{ scale: 1.1 }}
+							whileTap={{ scale: 0.95 }}
+						>
+							{isSidebarOpen ? (
+								<HiOutlineX size={24} />
+							) : (
+								<HiOutlineMenuAlt2 size={24} />
+							)}
+						</motion.button>
+						<h1 className="text-2xl font-bold text-primary">MediMentor</h1>
+					</div>
 					<div className="flex items-center gap-4">
 						<div className="text-accent">
 							Welcome, {userData?.name || "User"}
@@ -170,11 +168,11 @@ const Dashboard = () => {
 			</motion.header>
 
 			<div className="flex">
-				{/* Floating Sidebar */}
+				{/* Non-floating Sidebar */}
 				<AnimatePresence>
 					{isSidebarOpen && (
 						<motion.div
-							className="fixed top-24 left-4 bottom-4 z-40 bg-white rounded-xl shadow-lg overflow-hidden max-w-[250px]"
+							className="h-[calc(100vh-72px)] bg-white shadow-md overflow-hidden"
 							variants={sidebarVariants}
 							initial="closed"
 							animate="open"
@@ -201,15 +199,7 @@ const Dashboard = () => {
 										<a
 											href="#"
 											className="flex items-center gap-3 p-2 text-accent/80 hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
-										>
-											<HiOutlineUser size={20} />
-											<span>Profile</span>
-										</a>
-									</li>
-									<li>
-										<a
-											href="#"
-											className="flex items-center gap-3 p-2 text-accent/80 hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
+											onClick={() => navigate("/chatbot")}
 										>
 											<HiOutlineChatAlt size={20} />
 											<span>AI Chatbot</span>
@@ -233,15 +223,6 @@ const Dashboard = () => {
 											<span>Diet Plan</span>
 										</a>
 									</li>
-									<li>
-										<a
-											href="#"
-											className="flex items-center gap-3 p-2 text-accent/80 hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
-										>
-											<HiOutlineChartBar size={20} />
-											<span>Health Analytics</span>
-										</a>
-									</li>
 								</ul>
 							</motion.div>
 						</motion.div>
@@ -250,9 +231,7 @@ const Dashboard = () => {
 
 				{/* Dashboard Content */}
 				<motion.div
-					className={`container-custom py-10 transition-all duration-300 ${
-						isSidebarOpen ? "ml-0 md:ml-56" : "ml-0"
-					}`}
+					className="flex-1 p-6 transition-all duration-300"
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
 					transition={{ delay: 0.3 }}

@@ -15,6 +15,15 @@ const Questionnaire = () => {
 	const pathParts = location.pathname.split("/");
 	const currentStep = pathParts[pathParts.length - 1];
 
+	// Skip pregnancies question if user is male
+	useEffect(() => {
+		if (currentStep === "pregnancies" && answers.gender === "male") {
+			// Auto set pregnancies to 0 for males and skip to next question
+			updateAnswer("pregnancies", 0);
+			navigate("/questionnaire/work-type");
+		}
+	}, [currentStep, answers.gender, navigate, updateAnswer]);
+
 	// Function to navigate to next step based on current step
 	const goToNext = () => {
 		const routes = {
@@ -55,7 +64,10 @@ const Questionnaire = () => {
 			glucose: "/questionnaire/cholesterol",
 			"marital-status": "/questionnaire/glucose",
 			pregnancies: "/questionnaire/marital-status",
-			"work-type": "/questionnaire/pregnancies",
+			"work-type":
+				answers.gender === "male"
+					? "/questionnaire/marital-status"
+					: "/questionnaire/pregnancies",
 			residence: "/questionnaire/work-type",
 			"diabetes-history": "/questionnaire/residence",
 			"chest-pain": "/questionnaire/diabetes-history",
@@ -83,7 +95,10 @@ const Questionnaire = () => {
 			case "heart-rate":
 				return !!answers.heartRate && answers.heartRate > 0;
 			case "cigarettes":
-				return answers.cigarettesPerDay !== undefined;
+				return (
+					answers.cigarettesPerDay !== undefined &&
+					answers.cigarettesPerDay >= 0
+				);
 			case "smoking-status":
 				return !!answers.smokingStatus;
 			case "cholesterol":
@@ -93,13 +108,13 @@ const Questionnaire = () => {
 			case "marital-status":
 				return !!answers.maritalStatus;
 			case "pregnancies":
-				return answers.pregnancies !== undefined;
+				return answers.pregnancies !== undefined && answers.pregnancies >= 0;
 			case "work-type":
 				return !!answers.workType;
 			case "residence":
 				return !!answers.residenceType;
 			case "diabetes-history":
-				return answers.diabetesHistory !== undefined;
+				return !!answers.diabetesHistory;
 			case "chest-pain":
 				return !!answers.chestPain;
 			default:
@@ -206,8 +221,7 @@ const Questionnaire = () => {
 		<QuestionnaireLayout
 			step={5}
 			totalSteps={17}
-			question="What is your systolic blood pressure?"
-			description="Systolic pressure is the top number in a blood pressure reading."
+			question="What is your average systolic blood pressure (the top number)?"
 			onPrevious={goToPrevious}
 			onNext={goToNext}
 			canProceed={canProceed()}
@@ -220,7 +234,7 @@ const Questionnaire = () => {
 				placeholder="e.g., 120"
 				unit="mmHg"
 				min={70}
-				max={250}
+				max={230}
 			/>
 		</QuestionnaireLayout>
 	);
@@ -229,8 +243,7 @@ const Questionnaire = () => {
 		<QuestionnaireLayout
 			step={6}
 			totalSteps={17}
-			question="What is your diastolic blood pressure?"
-			description="Diastolic pressure is the bottom number in a blood pressure reading."
+			question="What is your average diastolic blood pressure (the bottom number)?"
 			onPrevious={goToPrevious}
 			onNext={goToNext}
 			canProceed={canProceed()}
@@ -243,7 +256,7 @@ const Questionnaire = () => {
 				placeholder="e.g., 80"
 				unit="mmHg"
 				min={40}
-				max={150}
+				max={140}
 			/>
 		</QuestionnaireLayout>
 	);
@@ -252,7 +265,7 @@ const Questionnaire = () => {
 		<QuestionnaireLayout
 			step={7}
 			totalSteps={17}
-			question="What is your resting heart rate?"
+			question="What is your resting heart rate (beats per minute)?"
 			onPrevious={goToPrevious}
 			onNext={goToNext}
 			canProceed={canProceed()}
@@ -270,69 +283,87 @@ const Questionnaire = () => {
 		</QuestionnaireLayout>
 	);
 
-	const renderCigarettesPerDay = () => (
-		<QuestionnaireLayout
-			step={8}
-			totalSteps={17}
-			question="How many cigarettes do you smoke per day?"
-			onPrevious={goToPrevious}
-			onNext={goToNext}
-			canProceed={canProceed()}
-		>
-			<NumberInput
-				id="cigarettesPerDay"
-				label="Enter number of cigarettes"
-				value={answers.cigarettesPerDay}
-				onChange={(value) => updateAnswer("cigarettesPerDay", value)}
-				placeholder="Enter 0 if you don't smoke"
-				unit="per day"
-				min={0}
-				max={100}
-			/>
-		</QuestionnaireLayout>
-	);
+	const renderCigarettesPerDay = () => {
+		// Skip cigarette question if work type is "child"
+		if (answers.workType === "child") {
+			updateAnswer("cigarettesPerDay", 0);
+			updateAnswer("smokingStatus", "never_smoked");
+			goToNext();
+			return null;
+		}
 
-	const renderSmokingStatus = () => (
-		<QuestionnaireLayout
-			step={9}
-			totalSteps={17}
-			question="What is your smoking status?"
-			onPrevious={goToPrevious}
-			onNext={goToNext}
-			canProceed={canProceed()}
-		>
-			<RadioOption
-				id="smoking-never"
-				name="smokingStatus"
-				value="never"
-				label="Never smoked"
-				selectedValue={answers.smokingStatus}
-				onChange={(value) => updateAnswer("smokingStatus", value)}
-			/>
-			<RadioOption
-				id="smoking-former"
-				name="smokingStatus"
-				value="former"
-				label="Former smoker"
-				selectedValue={answers.smokingStatus}
-				onChange={(value) => updateAnswer("smokingStatus", value)}
-			/>
-			<RadioOption
-				id="smoking-current"
-				name="smokingStatus"
-				value="current"
-				label="Current smoker"
-				selectedValue={answers.smokingStatus}
-				onChange={(value) => updateAnswer("smokingStatus", value)}
-			/>
-		</QuestionnaireLayout>
-	);
+		return (
+			<QuestionnaireLayout
+				step={8}
+				totalSteps={17}
+				question="How many cigarettes do you smoke per day on average?"
+				onPrevious={goToPrevious}
+				onNext={goToNext}
+				canProceed={canProceed()}
+			>
+				<NumberInput
+					id="cigarettesPerDay"
+					label="Enter number of cigarettes"
+					value={answers.cigarettesPerDay}
+					onChange={(value) => updateAnswer("cigarettesPerDay", value)}
+					placeholder="If none, enter 0"
+					unit="per day"
+					min={0}
+					max={100}
+				/>
+			</QuestionnaireLayout>
+		);
+	};
+
+	const renderSmokingStatus = () => {
+		// Skip smoking status if work type is "child"
+		if (answers.workType === "child") {
+			goToNext();
+			return null;
+		}
+
+		return (
+			<QuestionnaireLayout
+				step={9}
+				totalSteps={17}
+				question="What is your smoking status?"
+				onPrevious={goToPrevious}
+				onNext={goToNext}
+				canProceed={canProceed()}
+			>
+				<RadioOption
+					id="smoking-never"
+					name="smokingStatus"
+					value="never_smoked"
+					label="Never smoked"
+					selectedValue={answers.smokingStatus}
+					onChange={(value) => updateAnswer("smokingStatus", value)}
+				/>
+				<RadioOption
+					id="smoking-former"
+					name="smokingStatus"
+					value="formerly_smoked"
+					label="Formerly smoked"
+					selectedValue={answers.smokingStatus}
+					onChange={(value) => updateAnswer("smokingStatus", value)}
+				/>
+				<RadioOption
+					id="smoking-current"
+					name="smokingStatus"
+					value="smokes"
+					label="Smokes"
+					selectedValue={answers.smokingStatus}
+					onChange={(value) => updateAnswer("smokingStatus", value)}
+				/>
+			</QuestionnaireLayout>
+		);
+	};
 
 	const renderCholesterolIntake = () => (
 		<QuestionnaireLayout
 			step={10}
 			totalSteps={17}
-			question="How would you rate your cholesterol intake?"
+			question="How would you describe your daily cholesterol intake?"
 			onPrevious={goToPrevious}
 			onNext={goToNext}
 			canProceed={canProceed()}
@@ -340,24 +371,24 @@ const Questionnaire = () => {
 			<RadioOption
 				id="cholesterol-low"
 				name="cholesterolIntake"
-				value="low"
-				label="Low (healthy diet with minimal animal fats)"
+				value="low_intake"
+				label="Low intake"
 				selectedValue={answers.cholesterolIntake}
 				onChange={(value) => updateAnswer("cholesterolIntake", value)}
 			/>
 			<RadioOption
 				id="cholesterol-moderate"
 				name="cholesterolIntake"
-				value="moderate"
-				label="Moderate (balanced diet with some animal products)"
+				value="moderate_intake"
+				label="Moderate intake"
 				selectedValue={answers.cholesterolIntake}
 				onChange={(value) => updateAnswer("cholesterolIntake", value)}
 			/>
 			<RadioOption
 				id="cholesterol-high"
 				name="cholesterolIntake"
-				value="high"
-				label="High (regular consumption of fatty meats, dairy, eggs)"
+				value="high_intake"
+				label="High intake"
 				selectedValue={answers.cholesterolIntake}
 				onChange={(value) => updateAnswer("cholesterolIntake", value)}
 			/>
@@ -368,7 +399,7 @@ const Questionnaire = () => {
 		<QuestionnaireLayout
 			step={11}
 			totalSteps={17}
-			question="How would you rate your glucose/sugar intake?"
+			question="How would you describe your daily glucose or carbohydrate intake?"
 			onPrevious={goToPrevious}
 			onNext={goToNext}
 			canProceed={canProceed()}
@@ -376,24 +407,32 @@ const Questionnaire = () => {
 			<RadioOption
 				id="glucose-low"
 				name="glucoseIntake"
-				value="low"
-				label="Low (minimal added sugars, few sweet foods)"
+				value="low_intake"
+				label="Low intake"
 				selectedValue={answers.glucoseIntake}
 				onChange={(value) => updateAnswer("glucoseIntake", value)}
 			/>
 			<RadioOption
 				id="glucose-moderate"
 				name="glucoseIntake"
-				value="moderate"
-				label="Moderate (some sweets and sugary foods/drinks)"
+				value="moderate_intake"
+				label="Moderate intake"
 				selectedValue={answers.glucoseIntake}
 				onChange={(value) => updateAnswer("glucoseIntake", value)}
 			/>
 			<RadioOption
 				id="glucose-high"
 				name="glucoseIntake"
-				value="high"
-				label="High (regular sodas, desserts, candies, etc.)"
+				value="high_intake"
+				label="High intake"
+				selectedValue={answers.glucoseIntake}
+				onChange={(value) => updateAnswer("glucoseIntake", value)}
+			/>
+			<RadioOption
+				id="glucose-very-high"
+				name="glucoseIntake"
+				value="very_high_intake"
+				label="Very high intake"
 				selectedValue={answers.glucoseIntake}
 				onChange={(value) => updateAnswer("glucoseIntake", value)}
 			/>
@@ -404,130 +443,113 @@ const Questionnaire = () => {
 		<QuestionnaireLayout
 			step={12}
 			totalSteps={17}
-			question="What is your marital status?"
+			question="Have you ever been married?"
 			onPrevious={goToPrevious}
 			onNext={goToNext}
 			canProceed={canProceed()}
 		>
 			<RadioOption
-				id="marital-single"
+				id="marital-yes"
 				name="maritalStatus"
-				value="single"
-				label="Single"
+				value="yes"
+				label="Yes"
 				selectedValue={answers.maritalStatus}
 				onChange={(value) => updateAnswer("maritalStatus", value)}
 			/>
 			<RadioOption
-				id="marital-married"
+				id="marital-no"
 				name="maritalStatus"
-				value="married"
-				label="Married"
-				selectedValue={answers.maritalStatus}
-				onChange={(value) => updateAnswer("maritalStatus", value)}
-			/>
-			<RadioOption
-				id="marital-widowed"
-				name="maritalStatus"
-				value="widowed"
-				label="Widowed"
-				selectedValue={answers.maritalStatus}
-				onChange={(value) => updateAnswer("maritalStatus", value)}
-			/>
-			<RadioOption
-				id="marital-divorced"
-				name="maritalStatus"
-				value="divorced"
-				label="Divorced"
+				value="no"
+				label="No"
 				selectedValue={answers.maritalStatus}
 				onChange={(value) => updateAnswer("maritalStatus", value)}
 			/>
 		</QuestionnaireLayout>
 	);
 
-	const renderPregnancies = () => (
-		<QuestionnaireLayout
-			step={13}
-			totalSteps={17}
-			question="If applicable, how many pregnancies have you had?"
-			description="Enter 0 if not applicable or if you've never been pregnant."
-			onPrevious={goToPrevious}
-			onNext={goToNext}
-			canProceed={canProceed()}
-		>
-			<NumberInput
-				id="pregnancies"
-				label="Number of pregnancies"
-				value={answers.pregnancies}
-				onChange={(value) => updateAnswer("pregnancies", value)}
-				placeholder="Enter number"
-				min={0}
-				max={20}
-			/>
-		</QuestionnaireLayout>
-	);
+	const renderPregnancies = () => {
+		// Only show for females
+		if (answers.gender === "male") {
+			return null;
+		}
+
+		return (
+			<QuestionnaireLayout
+				step={13}
+				totalSteps={17}
+				question="How many times have you been pregnant?"
+				description="Enter 0 if you've never been pregnant."
+				onPrevious={goToPrevious}
+				onNext={goToNext}
+				canProceed={canProceed()}
+			>
+				<NumberInput
+					id="pregnancies"
+					label="Number of pregnancies"
+					value={answers.pregnancies}
+					onChange={(value) => updateAnswer("pregnancies", value)}
+					placeholder="Enter number"
+					min={0}
+					max={20}
+				/>
+			</QuestionnaireLayout>
+		);
+	};
 
 	const renderWorkType = () => (
 		<QuestionnaireLayout
 			step={14}
 			totalSteps={17}
-			question="What type of work do you do?"
+			question="What best describes your current work type?"
 			onPrevious={goToPrevious}
 			onNext={goToNext}
 			canProceed={canProceed()}
 		>
 			<RadioOption
-				id="work-private"
+				id="work-child"
 				name="workType"
-				value="private"
-				label="Private sector employee"
+				value="child"
+				label="Child"
+				selectedValue={answers.workType}
+				onChange={(value) => {
+					updateAnswer("workType", value);
+					// If child is selected, auto-set smoking related fields
+					if (value === "child") {
+						updateAnswer("cigarettesPerDay", 0);
+						updateAnswer("smokingStatus", "never_smoked");
+						updateAnswer("chestPain", "no");
+					}
+				}}
+			/>
+			<RadioOption
+				id="work-never"
+				name="workType"
+				value="never_worked"
+				label="Never worked"
 				selectedValue={answers.workType}
 				onChange={(value) => updateAnswer("workType", value)}
 			/>
 			<RadioOption
 				id="work-self-employed"
 				name="workType"
-				value="self-employed"
+				value="self_employed"
 				label="Self-employed"
 				selectedValue={answers.workType}
 				onChange={(value) => updateAnswer("workType", value)}
 			/>
 			<RadioOption
-				id="work-government"
+				id="work-govt"
 				name="workType"
-				value="government"
+				value="govt_job"
 				label="Government job"
 				selectedValue={answers.workType}
 				onChange={(value) => updateAnswer("workType", value)}
 			/>
 			<RadioOption
-				id="work-student"
+				id="work-private"
 				name="workType"
-				value="student"
-				label="Student"
-				selectedValue={answers.workType}
-				onChange={(value) => updateAnswer("workType", value)}
-			/>
-			<RadioOption
-				id="work-homemaker"
-				name="workType"
-				value="homemaker"
-				label="Homemaker"
-				selectedValue={answers.workType}
-				onChange={(value) => updateAnswer("workType", value)}
-			/>
-			<RadioOption
-				id="work-retired"
-				name="workType"
-				value="retired"
-				label="Retired"
-				selectedValue={answers.workType}
-				onChange={(value) => updateAnswer("workType", value)}
-			/>
-			<RadioOption
-				id="work-unemployed"
-				name="workType"
-				value="unemployed"
-				label="Unemployed"
+				value="private"
+				label="Private job"
 				selectedValue={answers.workType}
 				onChange={(value) => updateAnswer("workType", value)}
 			/>
@@ -538,7 +560,7 @@ const Questionnaire = () => {
 		<QuestionnaireLayout
 			step={15}
 			totalSteps={17}
-			question="What is your residence type?"
+			question="Do you live in an urban or rural area?"
 			onPrevious={goToPrevious}
 			onNext={goToNext}
 			canProceed={canProceed()}
@@ -566,75 +588,84 @@ const Questionnaire = () => {
 		<QuestionnaireLayout
 			step={16}
 			totalSteps={17}
-			question="Do you have a history of diabetes?"
+			question="Do you have a family history of diabetes?"
 			onPrevious={goToPrevious}
 			onNext={goToNext}
 			canProceed={canProceed()}
 		>
 			<RadioOption
-				id="diabetes-yes"
+				id="diabetes-none"
 				name="diabetesHistory"
-				value={true}
-				label="Yes"
+				value="no_history"
+				label="No history"
 				selectedValue={answers.diabetesHistory}
 				onChange={(value) => updateAnswer("diabetesHistory", value)}
 			/>
 			<RadioOption
-				id="diabetes-no"
+				id="diabetes-low"
 				name="diabetesHistory"
-				value={false}
-				label="No"
+				value="low_history"
+				label="Low history"
+				selectedValue={answers.diabetesHistory}
+				onChange={(value) => updateAnswer("diabetesHistory", value)}
+			/>
+			<RadioOption
+				id="diabetes-moderate"
+				name="diabetesHistory"
+				value="moderate_history"
+				label="Moderate history"
+				selectedValue={answers.diabetesHistory}
+				onChange={(value) => updateAnswer("diabetesHistory", value)}
+			/>
+			<RadioOption
+				id="diabetes-high"
+				name="diabetesHistory"
+				value="high_history"
+				label="High history"
 				selectedValue={answers.diabetesHistory}
 				onChange={(value) => updateAnswer("diabetesHistory", value)}
 			/>
 		</QuestionnaireLayout>
 	);
 
-	const renderChestPain = () => (
-		<QuestionnaireLayout
-			step={17}
-			totalSteps={17}
-			question="Do you experience chest pain or discomfort?"
-			onPrevious={goToPrevious}
-			onNext={goToNext}
-			canProceed={canProceed()}
-		>
-			<RadioOption
-				id="chest-pain-none"
-				name="chestPain"
-				value="none"
-				label="None"
-				selectedValue={answers.chestPain}
-				onChange={(value) => updateAnswer("chestPain", value)}
-			/>
-			<RadioOption
-				id="chest-pain-typical-angina"
-				name="chestPain"
-				value="typical_angina"
-				label="Typical Angina"
-				selectedValue={answers.chestPain}
-				onChange={(value) => updateAnswer("chestPain", value)}
-			/>
-			<RadioOption
-				id="chest-pain-atypical-angina"
-				name="chestPain"
-				value="atypical_angina"
-				label="Atypical Angina"
-				selectedValue={answers.chestPain}
-				onChange={(value) => updateAnswer("chestPain", value)}
-			/>
-			<RadioOption
-				id="chest-pain-non-anginal"
-				name="chestPain"
-				value="non_anginal_pain"
-				label="Non-anginal Pain"
-				selectedValue={answers.chestPain}
-				onChange={(value) => updateAnswer("chestPain", value)}
-			/>
-		</QuestionnaireLayout>
-	);
+	const renderChestPain = () => {
+		// Skip chest pain question if work type is "child"
+		if (answers.workType === "child") {
+			updateAnswer("chestPain", "no");
+			goToNext();
+			return null;
+		}
 
-	// Switch between different questionnaire steps based on the URL
+		return (
+			<QuestionnaireLayout
+				step={17}
+				totalSteps={17}
+				question="Do you experience chest pain during exercise?"
+				onPrevious={goToPrevious}
+				onNext={goToNext}
+				canProceed={canProceed()}
+			>
+				<RadioOption
+					id="chest-yes"
+					name="chestPain"
+					value="yes"
+					label="Yes"
+					selectedValue={answers.chestPain}
+					onChange={(value) => updateAnswer("chestPain", value)}
+				/>
+				<RadioOption
+					id="chest-no"
+					name="chestPain"
+					value="no"
+					label="No"
+					selectedValue={answers.chestPain}
+					onChange={(value) => updateAnswer("chestPain", value)}
+				/>
+			</QuestionnaireLayout>
+		);
+	};
+
+	// Function to render the appropriate step
 	const renderStep = () => {
 		switch (currentStep) {
 			case "gender":
@@ -674,92 +705,75 @@ const Questionnaire = () => {
 			case "complete":
 				return <QuestionnaireCompleteScreen />;
 			default:
-				return <div>Invalid questionnaire step</div>;
+				return null;
 		}
 	};
 
 	return renderStep();
 };
 
-// Create a separate component for QuestionnaireComplete screen
+// Summary screen shown when questionnaire is complete
 const QuestionnaireCompleteScreen = () => {
-	const { answers } = useQuestionnaire();
 	const navigate = useNavigate();
+	const { answers } = useQuestionnaire();
 
+	// Store the questionnaire data in localStorage
 	useEffect(() => {
-		// Here you would typically send the data to your backend
-		console.log("Questionnaire answers:", answers);
-
-		// Set a flag in localStorage to indicate questionnaire is completed
-		localStorage.setItem("questionnaireCompleted", "true");
-
-		// Update the user data with questionnaire answers
 		try {
-			const userData = JSON.parse(localStorage.getItem("user") || "{}");
-			userData.questionnaire = answers;
-			localStorage.setItem("user", JSON.stringify(userData));
+			// Get the existing user data from localStorage
+			const existingUserData = JSON.parse(localStorage.getItem("user") || "{}");
+
+			// Add the questionnaire answers to the user data
+			const updatedUserData = {
+				...existingUserData,
+				questionnaire: answers,
+			};
+
+			// Save the updated user data back to localStorage
+			localStorage.setItem("user", JSON.stringify(updatedUserData));
 		} catch (error) {
-			console.error("Error updating user data:", error);
+			console.error("Error saving questionnaire data:", error);
 		}
-
-		// Make sure the token is set for authentication persistence
-		if (!localStorage.getItem("token")) {
-			console.log("Setting token because it was missing");
-			localStorage.setItem("token", "mock-jwt-token");
-		}
-
-		// Redirect to dashboard after a short delay
-		const timer = setTimeout(() => {
-			// Force a refresh of the token before redirecting
-			const currentToken = localStorage.getItem("token");
-			localStorage.removeItem("token");
-			localStorage.setItem("token", currentToken || "mock-jwt-token");
-
-			console.log("Redirecting to dashboard...");
-			navigate("/Dashboard");
-		}, 3000);
-
-		return () => clearTimeout(timer);
-	}, [answers, navigate]);
+	}, [answers]);
 
 	return (
 		<div className="min-h-screen bg-secondary flex items-center justify-center p-4">
-			<div className="bg-white rounded-3xl shadow-lg overflow-hidden w-full max-w-md p-8 text-center">
-				<div className="mb-6">
-					<div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							className="h-12 w-12 text-primary"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M5 13l4 4L19 7"
-							/>
-						</svg>
-					</div>
+			<div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-8 text-center">
+				<div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						className="h-10 w-10 text-primary"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M5 13l4 4L19 7"
+						/>
+					</svg>
 				</div>
-				<h2 className="text-2xl font-bold text-accent mb-2">
+				<h1 className="text-2xl font-bold text-gray-800 mb-4">
 					Questionnaire Complete!
-				</h2>
-				<p className="text-accent/70 mb-6">
-					Thank you for completing the health questionnaire. Your responses have
-					been saved.
+				</h1>
+				<p className="text-gray-600 mb-8">
+					Thank you for providing your health information. Your personalized
+					health predictions are now ready.
 				</p>
-				<p className="text-accent/70 mb-2">Redirecting to your dashboard...</p>
-				<div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-					<div className="bg-primary h-full rounded-full animate-pulse"></div>
-				</div>
+				<button
+					onClick={() => navigate("/dashboard")}
+					className="bg-primary text-white font-semibold py-3 px-8 rounded-full hover:bg-primary/90 transition-colors w-full"
+				>
+					Go to Dashboard
+				</button>
 			</div>
 		</div>
 	);
 };
 
-// Export individual components for direct import
+// Export individual steps as components
 export const Gender = () => <Questionnaire />;
 export const Age = () => <Questionnaire />;
 export const Height = () => <Questionnaire />;
