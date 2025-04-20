@@ -3,9 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
-
 const API_URL = "http://localhost:8000";
-
 
 const SignIn = () => {
 	const [email, setEmail] = useState("");
@@ -25,16 +23,16 @@ const SignIn = () => {
 			// Real login using Django backend
 			const response = await axios.post(`${API_URL}/api/auth/login/`, {
 				email,
-				password
+				password,
 			});
-			
+
 			// Store the tokens and user data
 			localStorage.setItem("token", response.data.access);
 			localStorage.setItem("refreshToken", response.data.refresh);
 			localStorage.setItem("user", JSON.stringify(response.data.user));
-			
+
 			// Redirect to dashboard after successful login
-			navigate("/Dashboard");
+			navigate("/dashboard");
 		} catch (err) {
 			setError(err.response?.data?.error || "Invalid email or password");
 			setIsLoading(false);

@@ -33,22 +33,22 @@ const SignUp = () => {
 				name,
 				email,
 				password,
-				confirm_password: confirmPassword
+				confirm_password: confirmPassword,
 			});
-			
+
 			// Store the token
 			localStorage.setItem("token", response.data.access);
 			localStorage.setItem("refreshToken", response.data.refresh);
 			localStorage.setItem("user", JSON.stringify(response.data.user));
-			
-			// Redirect to dashboard after successful registration
-			navigate("/Questionnaire/Age");
+
+			// Redirect to questionnaire after successful registration
+			navigate("/questionnaire/gender");
 		} catch (err) {
 			setError(
-				err.response?.data?.error || 
-                err.response?.data?.password?.[0] ||
-                err.response?.data?.email?.[0] ||
-                "An error occurred during signup. Please try again."
+				err.response?.data?.error ||
+					err.response?.data?.password?.[0] ||
+					err.response?.data?.email?.[0] ||
+					"An error occurred during signup. Please try again."
 			);
 		} finally {
 			setIsLoading(false);

@@ -6,6 +6,7 @@ import {
 	HiOutlineChartBar,
 	HiOutlineAnnotation,
 } from "react-icons/hi";
+import medicalTeamImage from "../assets/images/medical-team.jpg";
 
 const Hero = () => {
 	return (
@@ -47,40 +48,23 @@ const Hero = () => {
 							</Link>
 						</div>
 
-						<div className="mt-10 grid grid-cols-2 gap-4">
-							<div className="flex items-start gap-2">
-								<HiOutlineDeviceMobile className="text-primary text-xl mt-1" />
-								<p className="text-accent/80">Voice assistant support</p>
+						<div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
+							<div className="flex items-center text-accent/70 gap-2">
+								<HiOutlineDeviceMobile className="text-primary" size={20} />
+								<span>Access Anywhere</span>
 							</div>
-							<div className="flex items-start gap-2">
-								<HiOutlineChartBar className="text-primary text-xl mt-1" />
-								<p className="text-accent/80">Risk assessment</p>
+							<div className="flex items-center text-accent/70 gap-2">
+								<HiOutlineChartBar className="text-primary" size={20} />
+								<span>Data-Driven</span>
 							</div>
-							<div className="flex items-start gap-2">
-								<HiOutlineAnnotation className="text-primary text-xl mt-1" />
-								<p className="text-accent/80">Mood journaling</p>
-							</div>
-							<div className="flex items-start gap-2">
-								<svg
-									className="text-primary mt-1 w-5 h-5"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-									xmlns="http://www.w3.org/2000/svg"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M13 10V3L4 14h7v7l9-11h-7z"
-									/>
-								</svg>
-								<p className="text-accent/80">Quick lifestyle tips</p>
+							<div className="flex items-center text-accent/70 gap-2">
+								<HiOutlineAnnotation className="text-primary" size={20} />
+								<span>24/7 Support</span>
 							</div>
 						</div>
 					</motion.div>
 
-					{/* Right Column - App Preview */}
+					{/* Right Column - Image */}
 					<motion.div
 						initial={{ opacity: 0, x: 50 }}
 						animate={{ opacity: 1, x: 0 }}
@@ -92,16 +76,17 @@ const Hero = () => {
 								15 min setup
 							</div>
 							<img
-								src="https://placehold.co/600x400/E6F1FF/0075FF?text=MediMentor+App"
-								alt="MediMentor Dashboard"
+								src={medicalTeamImage}
+								alt="Medical Team"
 								className="w-full h-auto rounded-2xl"
 							/>
 							<div className="mt-6">
 								<h3 className="text-xl font-bold text-accent">
-									Personalized Health Dashboard
+									Expert Medical Team
 								</h3>
 								<p className="text-accent/70 mt-2">
-									Track your health metrics and get personalized recommendations
+									Our AI is backed by healthcare professionals to provide
+									accurate health insights
 								</p>
 							</div>
 						</div>

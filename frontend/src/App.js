@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
 	BrowserRouter as Router,
 	Routes,
 	Route,
 	Navigate,
+	useLocation,
 } from "react-router-dom";
 
 // Pages
@@ -34,6 +35,34 @@ import {
 
 // Context
 import { QuestionnaireProvider } from "./context/QuestionnaireContext";
+
+// Protected route component
+const ProtectedRoute = ({ children }) => {
+	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const [loading, setLoading] = useState(true);
+	const location = useLocation();
+
+	useEffect(() => {
+		// Check for token in localStorage
+		const token = localStorage.getItem("token");
+		setIsAuthenticated(!!token);
+		setLoading(false);
+	}, [location]);
+
+	if (loading) {
+		return (
+			<div className="min-h-screen bg-secondary flex items-center justify-center">
+				Loading...
+			</div>
+		);
+	}
+
+	if (!isAuthenticated) {
+		return <Navigate to="/signin" replace />;
+	}
+
+	return children;
+};
 
 function App() {
 	return (
@@ -87,16 +116,14 @@ function App() {
 					<Route
 						path="/dashboard"
 						element={
-							localStorage.getItem("token") ? (
+							<ProtectedRoute>
 								<Dashboard />
-							) : (
-								<Navigate to="/signin" />
-							)
+							</ProtectedRoute>
 						}
 					/>
 
 					{/* Fallback route */}
-					<Route path="*" element={<Navigate to="/" />} />
+					<Route path="*" element={<Navigate to="/" replace />} />
 				</Routes>
 			</Router>
 		</QuestionnaireProvider>

@@ -73,12 +73,13 @@ const QuestionnaireLayout = ({
 					<div className="flex-grow flex flex-col justify-center">
 						<div className="mb-10">
 							<img
-								src="https://i.ibb.co/f9vNVyd/health-illustration.png"
-								alt="Illustration"
+								src="https://raw.githubusercontent.com/arpan-medhi/my-images/main/medical_illustration.png"
+								alt="Medical instruments and health icons"
 								className="w-full max-w-xs mx-auto"
 								onError={(e) => {
 									e.target.onerror = null;
-									e.target.src = "https://placekitten.com/300/200"; // Fallback image
+									e.target.src =
+										"https://via.placeholder.com/400x400?text=Medical+Questionnaire";
 								}}
 							/>
 						</div>
