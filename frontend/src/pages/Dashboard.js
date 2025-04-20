@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import axiosInstance from "../utils/axiosInstance";
 import {
 	HiOutlineLogout,
 	HiOutlineUser,
@@ -20,6 +21,8 @@ const Dashboard = () => {
 	const navigate = useNavigate();
 	const [userData, setUserData] = useState(null);
 	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
 	const [predictions, setPredictions] = useState({
 		diabetes: { risk: "Low", score: 15 },
 		heart: { risk: "Good", score: 78 },
@@ -49,491 +52,410 @@ const Dashboard = () => {
 	]);
 
 	useEffect(() => {
-		// Get user data from localStorage
-		const user = JSON.parse(localStorage.getItem("user") || '{"name":"User"}');
-		// Get questionnaire answers
-		const questionnaire = user.questionnaire || {};
-		setUserData({ ...user, questionnaire });
+		const fetchUserData = async () => {
+			setLoading(true);
+			try {
+				// Get basic user info from localStorage
+				const user = JSON.parse(localStorage.getItem("user") || '{"name":"User"}');
+				
+				// Fetch questionnaire data from backend
+				const response = await axiosInstance.get('/api/auth/questionnaire/latest/');
+				
+				// Combine user info with questionnaire data
+				setUserData({
+					...user,
+					questionnaire: response.data
+				});
+				
+				// In a real app, you would fetch predictions based on this data
+				// For now, we're using mock data set in the state
+				
+			} catch (err) {
+				console.error("Error fetching user data:", err);
+				// If we can't get the questionnaire data, just use what's in localStorage
+				const user = JSON.parse(localStorage.getItem("user") || '{"name":"User"}');
+				setUserData(user);
+				setError("Could not fetch your latest health data");
+			} finally {
+				setLoading(false);
+			}
+		};
 
-		// In a real app, you would fetch predictions from the backend here
-		// For now, we're using mock data set in the state
+		fetchUserData();
 	}, []);
 
 	const handleLogout = () => {
 		// Clear localStorage
 		localStorage.removeItem("token");
+		localStorage.removeItem("refreshToken");
 		localStorage.removeItem("user");
 		navigate("/");
 	};
 
-	// Helper function to determine prediction color
-	const getPredictionColor = (risk) => {
-		return risk === "Low"
-			? "text-green-500"
-			: risk === "Good"
-			? "text-green-500"
-			: risk === "Moderate"
-			? "text-yellow-500"
-			: "text-red-500";
+	// Extract BMI calculation
+	const calculateBMI = (height, weight) => {
+		if (!height || !weight) return "N/A";
+		const bmi = weight / (height * height);
+		return bmi.toFixed(1);
 	};
 
-	// Animation variants for staggered children
-	const containerVariants = {
-		hidden: { opacity: 0 },
-		show: {
-			opacity: 1,
-			transition: {
-				staggerChildren: 0.1,
-			},
-		},
+	// Function to get BMI category
+	const getBMICategory = (bmi) => {
+		if (bmi === "N/A") return "N/A";
+		const numBMI = parseFloat(bmi);
+		if (numBMI < 18.5) return "Underweight";
+		if (numBMI < 25) return "Healthy";
+		if (numBMI < 30) return "Overweight";
+		return "Obese";
 	};
 
-	const itemVariants = {
-		hidden: { opacity: 0, y: 20 },
-		show: { opacity: 1, y: 0 },
-	};
+	if (loading) {
+		return (
+			<div className="min-h-screen bg-secondary flex items-center justify-center">
+				<div className="text-primary text-xl">Loading your dashboard...</div>
+			</div>
+		);
+	}
 
-	// Sidebar animation variants
-	const sidebarVariants = {
-		open: {
-			x: 0,
-			width: "250px",
-			transition: {
-				type: "spring",
-				stiffness: 300,
-				damping: 30,
-			},
-		},
-		closed: {
-			x: "-100%",
-			width: 0,
-			transition: {
-				type: "spring",
-				stiffness: 300,
-				damping: 30,
-				delay: 0.2,
-			},
-		},
-	};
-
-	const sidebarContentVariants = {
-		open: {
-			opacity: 1,
-			transition: { delay: 0.2 },
-		},
-		closed: {
-			opacity: 0,
-			transition: { duration: 0.1 },
-		},
-	};
+	const questionnaire = userData?.questionnaire || {};
+	const bmi = calculateBMI(questionnaire.height, questionnaire.weight);
+	const bmiCategory = getBMICategory(bmi);
 
 	return (
-		<div className="min-h-screen bg-secondary">
-			{/* Header */}
-			<motion.header
-				className="bg-white shadow-md"
-				initial={{ opacity: 0, y: -20 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.5 }}
+		<div className="flex h-screen bg-gray-100">
+			{/* Mobile menu button */}
+			<button
+				className="md:hidden fixed top-4 left-4 z-50 bg-white p-2 rounded-md shadow-md"
+				onClick={() => setIsSidebarOpen(!isSidebarOpen)}
 			>
-				<div className="container-custom py-4 flex justify-between items-center">
-					<div className="flex items-center">
-						<motion.button
-							className="text-primary p-2 rounded-full hover:bg-primary/10 transition-colors mr-2"
-							onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-							whileHover={{ scale: 1.1 }}
-							whileTap={{ scale: 0.95 }}
-						>
-							{isSidebarOpen ? (
-								<HiOutlineX size={24} />
-							) : (
-								<HiOutlineMenuAlt2 size={24} />
-							)}
-						</motion.button>
-						<h1 className="text-2xl font-bold text-primary">MediMentor</h1>
-					</div>
-					<div className="flex items-center gap-4">
-						<div className="text-accent">
-							Welcome, {userData?.name || "User"}
-						</div>
-						<button
-							onClick={handleLogout}
-							className="flex items-center gap-2 text-accent/70 hover:text-primary transition-colors"
-						>
-							<HiOutlineLogout size={20} />
-							<span>Logout</span>
-						</button>
-					</div>
-				</div>
-			</motion.header>
+				{isSidebarOpen ? (
+					<HiOutlineX className="h-6 w-6 text-primary" />
+				) : (
+					<HiOutlineMenuAlt2 className="h-6 w-6 text-primary" />
+				)}
+			</button>
 
-			<div className="flex">
-				{/* Non-floating Sidebar */}
-				<AnimatePresence>
-					{isSidebarOpen && (
-						<motion.div
-							className="h-[calc(100vh-72px)] bg-white shadow-md overflow-hidden"
-							variants={sidebarVariants}
-							initial="closed"
-							animate="open"
-							exit="closed"
-						>
-							<motion.div
-								className="h-full p-6 overflow-y-auto"
-								variants={sidebarContentVariants}
-							>
-								<h2 className="text-lg font-medium text-accent mb-4">
-									Navigation
-								</h2>
-								<ul className="space-y-2">
-									<li>
-										<a
-											href="#"
-											className="flex items-center gap-3 p-2 text-primary bg-primary/5 rounded-md"
-										>
-											<HiOutlineHome size={20} />
-											<span>Dashboard</span>
-										</a>
-									</li>
-									<li>
-										<a
-											href="#"
-											className="flex items-center gap-3 p-2 text-accent/80 hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
-											onClick={() => navigate("/chatbot")}
-										>
-											<HiOutlineChatAlt size={20} />
-											<span>AI Chatbot</span>
-										</a>
-									</li>
-									<li>
-										<a
-											href="#"
-											className="flex items-center gap-3 p-2 text-accent/80 hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
-										>
-											<HiOutlineBookOpen size={20} />
-											<span>Daily Journal</span>
-										</a>
-									</li>
-									<li>
-										<a
-											href="#"
-											className="flex items-center gap-3 p-2 text-accent/80 hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
-										>
-											<HiOutlineClipboardList size={20} />
-											<span>Diet Plan</span>
-										</a>
-									</li>
-								</ul>
-							</motion.div>
-						</motion.div>
-					)}
-				</AnimatePresence>
-
-				{/* Dashboard Content */}
-				<motion.div
-					className="flex-1 p-6 transition-all duration-300"
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
-					transition={{ delay: 0.3 }}
-				>
-					{/* User Profile Section */}
+			{/* Sidebar */}
+			<AnimatePresence>
+				{isSidebarOpen && (
 					<motion.div
-						className="bg-white rounded-xl shadow-sm p-6 mb-6"
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.5, delay: 0.3 }}
+						initial={{ x: -300 }}
+						animate={{ x: 0 }}
+						exit={{ x: -300 }}
+						className="fixed md:static inset-y-0 left-0 w-64 bg-primary text-white flex flex-col shadow-lg z-40"
 					>
-						<div className="flex items-center mb-4">
-							<div className="flex-shrink-0 mr-4">
-								<div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-									<HiOutlineUser className="text-primary" size={28} />
-								</div>
-							</div>
-							<div>
-								<h2 className="text-2xl font-semibold text-accent">
-									{userData?.name || "User Profile"}
-								</h2>
-								<p className="text-accent/70">
-									{userData?.email || "No email provided"}
-								</p>
-							</div>
+						<div className="p-5 border-b border-primary-dark">
+							<h2 className="text-2xl font-bold">MediMentor</h2>
 						</div>
 
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-							<div className="bg-gray-50 p-4 rounded-lg">
-								<h3 className="text-sm font-medium text-accent/70 mb-2 flex items-center">
-									<HiOutlineInformationCircle className="mr-1" size={16} />
-									Basic Information
-								</h3>
-								<div className="space-y-2">
-									<div className="flex justify-between">
-										<span className="text-accent/70">Gender:</span>
-										<span className="font-medium">
-											{userData?.questionnaire?.gender || "N/A"}
-										</span>
-									</div>
-									<div className="flex justify-between">
-										<span className="text-accent/70">Age:</span>
-										<span className="font-medium">
-											{userData?.questionnaire?.age || "N/A"} years
-										</span>
-									</div>
-								</div>
-							</div>
+						<nav className="flex-1 overflow-y-auto py-4">
+							<div className="px-4 py-2 text-primary-light text-sm">MAIN MENU</div>
+							<a
+								href="#"
+								className="flex items-center px-6 py-3 text-white hover:bg-primary-dark"
+							>
+								<HiOutlineHome className="h-5 w-5 mr-3" />
+								<span>Home</span>
+							</a>
+							<a
+								href="#"
+								className="flex items-center px-6 py-3 bg-primary-dark text-white"
+							>
+								<HiOutlineChartBar className="h-5 w-5 mr-3" />
+								<span>Dashboard</span>
+							</a>
+							<a
+								href="#"
+								className="flex items-center px-6 py-3 text-white hover:bg-primary-dark"
+							>
+								<HiOutlineClipboardList className="h-5 w-5 mr-3" />
+								<span>Health Records</span>
+							</a>
+							<a
+								href="#"
+								className="flex items-center px-6 py-3 text-white hover:bg-primary-dark"
+							>
+								<HiOutlineChatAlt className="h-5 w-5 mr-3" />
+								<span>Chat with AI</span>
+							</a>
 
-							<div className="bg-gray-50 p-4 rounded-lg">
-								<h3 className="text-sm font-medium text-accent/70 mb-2 flex items-center">
-									<HiOutlineInformationCircle className="mr-1" size={16} />
-									Body Metrics
-								</h3>
-								<div className="space-y-2">
-									<div className="flex justify-between">
-										<span className="text-accent/70">Height:</span>
-										<span className="font-medium">
-											{userData?.questionnaire?.height || "N/A"} m
-										</span>
-									</div>
-									<div className="flex justify-between">
-										<span className="text-accent/70">Weight:</span>
-										<span className="font-medium">
-											{userData?.questionnaire?.weight || "N/A"} kg
-										</span>
-									</div>
-								</div>
+							<div className="px-4 py-2 mt-6 text-primary-light text-sm">
+								ACCOUNT
 							</div>
-
-							<div className="bg-gray-50 p-4 rounded-lg">
-								<h3 className="text-sm font-medium text-accent/70 mb-2 flex items-center">
-									<HiOutlineInformationCircle className="mr-1" size={16} />
-									Vital Signs
-								</h3>
-								<div className="space-y-2">
-									<div className="flex justify-between">
-										<span className="text-accent/70">Blood Pressure:</span>
-										<span className="font-medium">
-											{userData?.questionnaire?.systolicBP || "N/A"}/
-											{userData?.questionnaire?.diastolicBP || "N/A"}
-										</span>
-									</div>
-									<div className="flex justify-between">
-										<span className="text-accent/70">Heart Rate:</span>
-										<span className="font-medium">
-											{userData?.questionnaire?.heartRate || "N/A"} bpm
-										</span>
-									</div>
-								</div>
-							</div>
-						</div>
+							<a
+								href="#"
+								className="flex items-center px-6 py-3 text-white hover:bg-primary-dark"
+							>
+								<HiOutlineUser className="h-5 w-5 mr-3" />
+								<span>Profile</span>
+							</a>
+							<button
+								onClick={handleLogout}
+								className="flex items-center px-6 py-3 text-white hover:bg-primary-dark w-full text-left"
+							>
+								<HiOutlineLogout className="h-5 w-5 mr-3" />
+								<span>Logout</span>
+							</button>
+						</nav>
 					</motion.div>
+				)}
+			</AnimatePresence>
 
-					{/* Health Predictions */}
-					<motion.div
-						className="bg-white rounded-xl shadow-sm p-6 mb-6"
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.5, delay: 0.4 }}
-					>
-						<h2 className="text-2xl font-semibold text-accent mb-4 flex items-center">
-							<HiOutlineChartBar className="mr-2" size={24} />
-							Your Health Predictions
+			{/* Main content */}
+			<div className="flex-1 overflow-y-auto">
+				<div className="p-6 md:p-10 max-w-7xl mx-auto">
+					<div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+						<div>
+							<h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+								Hello, {userData?.name || "User"}
+							</h1>
+							<p className="text-gray-600 mt-1">
+								Here's your health overview for today.
+							</p>
+						</div>
+						{error && (
+							<div className="bg-red-100 text-red-700 px-4 py-2 rounded-md mt-2 md:mt-0">
+								{error}
+							</div>
+						)}
+					</div>
+
+					{/* Health stats */}
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+						<div className="bg-white p-6 rounded-xl shadow-sm">
+							<div className="flex justify-between items-start">
+								<div>
+									<p className="text-sm text-gray-500">BMI</p>
+									<h3 className="text-2xl font-bold text-gray-800 mt-1">
+										{bmi}
+									</h3>
+									<p className="text-xs text-gray-500 mt-1">
+										{bmiCategory}
+									</p>
+								</div>
+								<span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+									{questionnaire.gender || "N/A"}
+								</span>
+							</div>
+						</div>
+
+						<div className="bg-white p-6 rounded-xl shadow-sm">
+							<div className="flex justify-between items-start">
+								<div>
+									<p className="text-sm text-gray-500">Blood Pressure</p>
+									<h3 className="text-2xl font-bold text-gray-800 mt-1">
+										{questionnaire.systolicBP || "N/A"}/{questionnaire.diastolicBP || "N/A"}
+									</h3>
+									<p className="text-xs text-gray-500 mt-1">mmHg</p>
+								</div>
+								<span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+									{questionnaire.systolicBP && questionnaire.diastolicBP && questionnaire.systolicBP < 120 && questionnaire.diastolicBP < 80
+										? "Normal"
+										: questionnaire.systolicBP && questionnaire.diastolicBP && questionnaire.systolicBP < 130 && questionnaire.diastolicBP < 80
+										? "Elevated"
+										: "High"}
+								</span>
+							</div>
+						</div>
+
+						<div className="bg-white p-6 rounded-xl shadow-sm">
+							<div className="flex justify-between items-start">
+								<div>
+									<p className="text-sm text-gray-500">Heart Rate</p>
+									<h3 className="text-2xl font-bold text-gray-800 mt-1">
+										{questionnaire.heartRate || "N/A"}
+									</h3>
+									<p className="text-xs text-gray-500 mt-1">bpm</p>
+								</div>
+								<span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+									{questionnaire.heartRate && questionnaire.heartRate < 60
+										? "Low"
+										: questionnaire.heartRate && questionnaire.heartRate > 100
+										? "High"
+										: "Normal"}
+								</span>
+							</div>
+						</div>
+
+						<div className="bg-white p-6 rounded-xl shadow-sm">
+							<div className="flex justify-between items-start">
+								<div>
+									<p className="text-sm text-gray-500">Age</p>
+									<h3 className="text-2xl font-bold text-gray-800 mt-1">
+										{questionnaire.age || "N/A"}
+									</h3>
+									<p className="text-xs text-gray-500 mt-1">years</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Risk predictions */}
+					<div className="mb-8">
+						<h2 className="text-xl font-bold text-gray-800 mb-4">
+							Health Risk Assessment
 						</h2>
-						<p className="text-accent/70 mb-6">
-							Based on your health profile, our AI models have generated these
-							predictions. Note that these are only estimates and should not
-							replace medical advice.
-						</p>
-
-						<motion.div
-							className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
-							variants={containerVariants}
-							initial="hidden"
-							animate="show"
-						>
-							<motion.div
-								variants={itemVariants}
-								className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-							>
-								<h3 className="text-lg font-medium text-accent mb-2">
-									Diabetes Risk
-								</h3>
-								<p
-									className={`text-3xl font-bold ${getPredictionColor(
-										predictions.diabetes.risk
-									)}`}
-								>
-									{predictions.diabetes.risk}
-								</p>
-								<div className="w-full bg-white/50 rounded-full h-2.5 mt-4">
-									<div
-										className="bg-primary h-2.5 rounded-full"
-										style={{ width: `${predictions.diabetes.score}%` }}
-									></div>
-								</div>
-								<p className="text-accent/70 text-sm mt-2">
-									Based on your BMI, diet, and family history
-								</p>
-							</motion.div>
-
-							<motion.div
-								variants={itemVariants}
-								className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-							>
-								<h3 className="text-lg font-medium text-accent mb-2">
-									Heart Risk
-								</h3>
-								<p
-									className={`text-3xl font-bold ${getPredictionColor(
-										predictions.heart.risk
-									)}`}
-								>
-									{predictions.heart.risk}
-								</p>
-								<div className="w-full bg-white/50 rounded-full h-2.5 mt-4">
-									<div
-										className="bg-primary h-2.5 rounded-full"
-										style={{ width: `${predictions.heart.score}%` }}
-									></div>
-								</div>
-								<p className="text-accent/70 text-sm mt-2">
-									Based on your blood pressure, activity, and lifestyle
-								</p>
-							</motion.div>
-
-							<motion.div
-								variants={itemVariants}
-								className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-							>
-								<h3 className="text-lg font-medium text-accent mb-2">
-									Hypertension Risk
-								</h3>
-								<p
-									className={`text-3xl font-bold ${getPredictionColor(
-										predictions.hypertension.risk
-									)}`}
-								>
-									{predictions.hypertension.risk}
-								</p>
-								<div className="w-full bg-white/50 rounded-full h-2.5 mt-4">
-									<div
-										className="bg-primary h-2.5 rounded-full"
-										style={{ width: `${predictions.hypertension.score}%` }}
-									></div>
-								</div>
-								<p className="text-accent/70 text-sm mt-2">
-									Based on your blood pressure readings and lifestyle
-								</p>
-							</motion.div>
-						</motion.div>
-
-						<motion.div
-							className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"
-							variants={containerVariants}
-							initial="hidden"
-							animate="show"
-							transition={{ delay: 0.3 }}
-						>
-							<motion.div
-								variants={itemVariants}
-								className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-							>
-								<h3 className="text-lg font-medium text-accent mb-2">
-									Obesity Risk
-								</h3>
-								<p
-									className={`text-3xl font-bold ${getPredictionColor(
-										predictions.obesity.risk
-									)}`}
-								>
-									{predictions.obesity.risk}
-								</p>
-								<div className="w-full bg-white/50 rounded-full h-2.5 mt-4">
-									<div
-										className="bg-primary h-2.5 rounded-full"
-										style={{ width: `${predictions.obesity.score}%` }}
-									></div>
-								</div>
-								<p className="text-accent/70 text-sm mt-2">
-									Based on your BMI, diet, and physical activity
-								</p>
-							</motion.div>
-
-							<motion.div
-								variants={itemVariants}
-								className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-							>
-								<h3 className="text-lg font-medium text-accent mb-2">
-									Stroke Risk
-								</h3>
-								<p
-									className={`text-3xl font-bold ${getPredictionColor(
-										predictions.stroke.risk
-									)}`}
-								>
-									{predictions.stroke.risk}
-								</p>
-								<div className="w-full bg-white/50 rounded-full h-2.5 mt-4">
-									<div
-										className="bg-primary h-2.5 rounded-full"
-										style={{ width: `${predictions.stroke.score}%` }}
-									></div>
-								</div>
-								<p className="text-accent/70 text-sm mt-2">
-									Based on your blood pressure, smoking status, and family
-									history
-								</p>
-							</motion.div>
-						</motion.div>
-					</motion.div>
-
-					{/* Recent Chat Sessions */}
-					<motion.div
-						className="bg-white rounded-xl shadow-sm p-6 mb-6"
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.5, delay: 0.5 }}
-					>
-						<h2 className="text-xl font-semibold text-accent mb-4 flex items-center">
-							<HiOutlineChatAlt className="mr-2" size={24} />
-							Records of recent chat sessions
-						</h2>
-						<p className="text-accent/70 text-sm mb-6">
-							View or replay your recent conversations with our AI health
-							assistant
-						</p>
-
-						<motion.div
-							className="space-y-4"
-							variants={containerVariants}
-							initial="hidden"
-							animate="show"
-						>
-							{recentSessions.map((session) => (
-								<motion.div
-									key={session.id}
-									className="flex items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors"
-									variants={itemVariants}
-								>
-									<div className="flex-shrink-0 mr-4">
-										<div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-											<HiOutlineChatAlt className="text-primary" size={16} />
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+							{Object.entries(predictions).map(([key, value]) => (
+								<div key={key} className="bg-white p-6 rounded-xl shadow-sm">
+									<div className="flex items-center mb-4">
+										<div
+											className={`w-12 h-12 rounded-full flex items-center justify-center ${
+												value.risk === "Low"
+													? "bg-green-100 text-green-500"
+													: value.risk === "Moderate"
+													? "bg-yellow-100 text-yellow-500"
+													: value.risk === "Good"
+													? "bg-blue-100 text-blue-500"
+													: "bg-red-100 text-red-500"
+											}`}
+										>
+											<HiOutlineInformationCircle className="h-6 w-6" />
+										</div>
+										<div className="ml-4">
+											<h3 className="font-semibold text-gray-800 capitalize">
+												{key}
+											</h3>
+											<p
+												className={`text-sm ${
+													value.risk === "Low" || value.risk === "Good"
+														? "text-green-500"
+														: value.risk === "Moderate"
+														? "text-yellow-500"
+														: "text-red-500"
+												}`}
+											>
+												{value.risk} risk
+											</p>
 										</div>
 									</div>
-									<div className="flex-grow">
-										<h4 className="font-medium">{session.title}</h4>
-										<p className="text-sm text-accent/70">
-											{session.doctor} • {session.duration}
-										</p>
+									<div className="w-full bg-gray-200 rounded-full h-2.5">
+										<div
+											className={`h-2.5 rounded-full ${
+												value.risk === "Low" || value.risk === "Good"
+													? "bg-green-500"
+													: value.risk === "Moderate"
+													? "bg-yellow-500"
+													: "bg-red-500"
+											}`}
+											style={{ width: `${100 - value.score}%` }}
+										></div>
 									</div>
-									<div>
-										<button className="text-primary hover:text-primary/80 transition-colors">
-											<HiOutlinePlay size={20} />
+								</div>
+							))}
+						</div>
+					</div>
+
+					{/* Health summary */}
+					<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+						<div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm">
+							<h2 className="text-xl font-bold text-gray-800 mb-4">
+								Health Summary
+							</h2>
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+								<div className="border-b md:border-b-0 md:border-r border-gray-200 pb-4 md:pb-0 md:pr-4">
+									<h3 className="text-gray-500 text-sm">Height</h3>
+									<p className="font-semibold mt-1">
+										{questionnaire.height ? `${questionnaire.height} m` : "N/A"}
+									</p>
+								</div>
+								<div className="border-b md:border-b-0 md:border-r border-gray-200 pb-4 md:pb-0 md:pr-4">
+									<h3 className="text-gray-500 text-sm">Weight</h3>
+									<p className="font-semibold mt-1">
+										{questionnaire.weight ? `${questionnaire.weight} kg` : "N/A"}
+									</p>
+								</div>
+								<div>
+									<h3 className="text-gray-500 text-sm">Smoking Status</h3>
+									<p className="font-semibold mt-1 capitalize">
+										{questionnaire.smokingStatus || "N/A"}
+									</p>
+								</div>
+							</div>
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+								<div className="border-b md:border-b-0 md:border-r border-gray-200 pb-4 md:pb-0 md:pr-4">
+									<h3 className="text-gray-500 text-sm">Cholesterol</h3>
+									<p className="font-semibold mt-1 capitalize">
+										{questionnaire.cholesterolIntake || "N/A"}
+									</p>
+								</div>
+								<div className="border-b md:border-b-0 md:border-r border-gray-200 pb-4 md:pb-0 md:pr-4">
+									<h3 className="text-gray-500 text-sm">Glucose</h3>
+									<p className="font-semibold mt-1 capitalize">
+										{questionnaire.glucoseIntake || "N/A"}
+									</p>
+								</div>
+								<div>
+									<h3 className="text-gray-500 text-sm">Diabetes History</h3>
+									<p className="font-semibold mt-1 capitalize">
+										{questionnaire.diabetesHistory || "N/A"}
+									</p>
+								</div>
+							</div>
+						</div>
+
+						<div className="bg-white p-6 rounded-xl shadow-sm">
+							<h2 className="text-xl font-bold text-gray-800 mb-4">Lifestyle</h2>
+							<div className="space-y-4">
+								<div>
+									<h3 className="text-gray-500 text-sm">Work Type</h3>
+									<p className="font-semibold mt-1 capitalize">
+										{questionnaire.workType || "N/A"}
+									</p>
+								</div>
+								<div>
+									<h3 className="text-gray-500 text-sm">Residence Type</h3>
+									<p className="font-semibold mt-1 capitalize">
+										{questionnaire.residenceType || "N/A"}
+									</p>
+								</div>
+								<div>
+									<h3 className="text-gray-500 text-sm">Marital Status</h3>
+									<p className="font-semibold mt-1 capitalize">
+										{questionnaire.maritalStatus || "N/A"}
+									</p>
+								</div>
+								<div>
+									<h3 className="text-gray-500 text-sm">Cigarettes Per Day</h3>
+									<p className="font-semibold mt-1">
+										{questionnaire.cigarettesPerDay !== undefined && questionnaire.cigarettesPerDay !== null
+											? questionnaire.cigarettesPerDay
+											: "N/A"}
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Recent sessions */}
+					<div>
+						<h2 className="text-xl font-bold text-gray-800 mb-4">
+							Recent AI Sessions
+						</h2>
+						<div className="bg-white rounded-xl shadow-sm overflow-hidden">
+							<div className="divide-y divide-gray-200">
+								{recentSessions.map((session) => (
+									<div
+										key={session.id}
+										className="p-6 hover:bg-gray-50 transition-colors duration-150 flex justify-between items-center"
+									>
+										<div>
+											<h3 className="font-semibold text-gray-800">
+												{session.title}
+											</h3>
+											<p className="text-sm text-gray-500 mt-1">
+												{session.doctor} • {session.duration}
+											</p>
+										</div>
+										<button className="text-primary hover:text-primary-dark">
+											<HiOutlinePlay className="h-6 w-6" />
 										</button>
 									</div>
-								</motion.div>
-							))}
-						</motion.div>
-					</motion.div>
-				</motion.div>
+								))}
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	);

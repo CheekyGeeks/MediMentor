@@ -1,9 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQuestionnaire } from "../context/QuestionnaireContext";
 import QuestionnaireLayout from "../components/questionnaire/QuestionnaireLayout";
 import RadioOption from "../components/questionnaire/RadioOption";
 import NumberInput from "../components/questionnaire/NumberInput";
+import axiosInstance from "../utils/axiosInstance";
 
 // The main Questionnaire component that manages all steps
 const Questionnaire = () => {
@@ -716,25 +717,60 @@ const Questionnaire = () => {
 const QuestionnaireCompleteScreen = () => {
 	const navigate = useNavigate();
 	const { answers } = useQuestionnaire();
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [error, setError] = useState("");
+	const [submitted, setSubmitted] = useState(false);
 
-	// Store the questionnaire data in localStorage
-	useEffect(() => {
+	// Define the submitQuestionnaire function outside useEffect
+	const submitQuestionnaire = async () => {
+		if (isSubmitting || submitted) return;
+
+		setIsSubmitting(true);
 		try {
-			// Get the existing user data from localStorage
-			const existingUserData = JSON.parse(localStorage.getItem("user") || "{}");
+			// Submit to backend using the authentication app endpoint
+			await axiosInstance.post("/api/auth/questionnaire/submit/", answers);
 
-			// Add the questionnaire answers to the user data
-			const updatedUserData = {
-				...existingUserData,
-				questionnaire: answers,
-			};
+			// Store in localStorage as well
+			try {
+				// Get the existing user data from localStorage
+				const existingUserData = JSON.parse(
+					localStorage.getItem("user") || "{}"
+				);
 
-			// Save the updated user data back to localStorage
-			localStorage.setItem("user", JSON.stringify(updatedUserData));
+				// Add the questionnaire answers to the user data
+				const updatedUserData = {
+					...existingUserData,
+					questionnaire: answers,
+				};
+
+				// Save the updated user data back to localStorage
+				localStorage.setItem("user", JSON.stringify(updatedUserData));
+			} catch (localStorageError) {
+				console.error(
+					"Error saving questionnaire data to localStorage:",
+					localStorageError
+				);
+			}
+
+			setSubmitted(true);
+			setIsSubmitting(false);
 		} catch (error) {
-			console.error("Error saving questionnaire data:", error);
+			console.error("Error submitting questionnaire data:", error);
+			setError("Failed to submit questionnaire data. Please try again later.");
+			setIsSubmitting(false);
 		}
-	}, [answers]);
+	};
+
+	// Use a ref to track if we've already triggered the submission
+	const hasSubmittedRef = React.useRef(false);
+
+	// Then call it in useEffect with proper check
+	useEffect(() => {
+		if (!hasSubmittedRef.current) {
+			hasSubmittedRef.current = true;
+			submitQuestionnaire();
+		}
+	}, []);
 
 	return (
 		<div className="min-h-screen bg-secondary flex items-center justify-center p-4">
@@ -758,13 +794,30 @@ const QuestionnaireCompleteScreen = () => {
 				<h1 className="text-2xl font-bold text-gray-800 mb-4">
 					Questionnaire Complete!
 				</h1>
-				<p className="text-gray-600 mb-8">
-					Thank you for providing your health information. Your personalized
-					health predictions are now ready.
-				</p>
+				{isSubmitting ? (
+					<p className="text-gray-600 mb-8">
+						Submitting your health information...
+					</p>
+				) : error ? (
+					<div className="mb-8">
+						<p className="text-red-600 mb-2">{error}</p>
+						<button
+							onClick={submitQuestionnaire}
+							className="bg-red-500 text-white font-semibold py-2 px-4 rounded-full hover:bg-red-600 transition-colors"
+						>
+							Retry Submission
+						</button>
+					</div>
+				) : (
+					<p className="text-gray-600 mb-8">
+						Thank you for providing your health information. Your personalized
+						health predictions are now ready.
+					</p>
+				)}
 				<button
 					onClick={() => navigate("/dashboard")}
 					className="bg-primary text-white font-semibold py-3 px-8 rounded-full hover:bg-primary/90 transition-colors w-full"
+					disabled={isSubmitting}
 				>
 					Go to Dashboard
 				</button>
