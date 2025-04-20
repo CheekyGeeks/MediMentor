@@ -1,0 +1,22 @@
+{
+    "hypertension_risk_percent": {
+        "percentage": 95.0,
+        "belongingness": "Risk of not having hypertension"
+    },
+    "stroke_risk_percent": {
+        "percentage": 0.21,
+        "belongingness": "Risk of not having stroke"
+    },
+    "diabetes_risk_percent": {
+        "percentage": 5.0,
+        "belongingness": "Risk of not having diabetes"
+    },
+    "obesity_risk_percent": {
+        "percentage": 95.0,
+        "category": "Normal"
+    },
+    "heart_risk_percent": {
+        "percentage": 61.45,
+        "belongingness": "Risk of not having heart"
+    }
+}
